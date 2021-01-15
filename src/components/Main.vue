@@ -38,10 +38,12 @@ const currencyFormatter = new Intl.NumberFormat('fr-FR', { style: 'currency', cu
 
 export default {
   created: function() {
-    const nbGridsStr = (this.$route.query.nbGrids||0);
-    this.params.nbGrids = (parseInt(nbGridsStr, 10)||0);
+    const queryNbGrids = (this.$route.query.nbGrids||0);
+    const querySeed = this.query2seed(this.$route.query.seed);
+    this.params.nbGrids = (parseInt(queryNbGrids, 10)||0);
     this.params.gridType = (this.$route.query.gridType||false);
     this.params.isOption = (this.$route.query.isOption||false);
+    this.params.seed = (querySeed||this.seedGenerator());
   },
   data() {
     return {
@@ -49,10 +51,26 @@ export default {
         nbGrids: 0,
         gridType: false,
         isOption: false,
+        seed: [],
       },
     }
   },
   computed: {
+    seedMaxValue: function() {
+      return 50;
+    },
+    squareMaxNumber: function() {
+      return this.params.gridType ? 5 : 5;
+    },
+    squareMaxValue: function() {
+      return this.params.gridType ? 49 : 50;
+    },
+    starMaxNumber: function() {
+      return this.params.gridType ? 1 : 2;
+    },
+    starMaxValue: function() {
+      return this.params.gridType ? 10 : 12;
+    },
     gridPrice: function() {
       return this.params.gridType ? 2.20 : 2.50;
     },
@@ -61,6 +79,43 @@ export default {
     },
     totalPrice: function() {
       return this.params.nbGrids * (this.gridPrice + (this.params.isOption ? this.optionPrice : 0));
+    },
+  },
+  methods: {
+    seedGenerator: function() {
+      var a = Array.from({length: this.seedMaxValue}, (_, i) => i + 1);
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    },
+    seed2query: function(seed) {
+      if (Array.isArray(seed)) {
+        return seed.join();
+      }
+      return null;
+    },
+    query2seed: function(query) {
+      if (typeof query == 'string') {
+        query = query.split(',').map(function(value) {
+          return parseInt(value);
+        });
+        if (query.length == this.seedMaxValue) {
+          for (var i = 1 ; i <= this.seedMaxValue ; i++) {
+            if (!query.includes(i)) {
+              return null;
+            }
+          }
+          return query;
+        }
+      }
+      return null;
+    },
+    filterSeed: function(max) {
+      return this.params.seed.filter(function (value) {
+        return value <= max;
+      });
     },
   },
   filters: {
@@ -77,6 +132,7 @@ export default {
             nbGrids: this.params.nbGrids,
             gridType: this.params.gridType,
             isOption: this.params.isOption,
+            seed: this.seed2query(this.params.seed),
           }
         }).catch(() => {});
       }
