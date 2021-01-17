@@ -1,7 +1,7 @@
 <template>
   <div>
 
-    <section class="hero">
+    <nav class="hero">
       <div class="hero-body box">
         <div class="container columns">
 
@@ -28,12 +28,22 @@
 
         </div>
       </div>
+    </nav>
+
+    <section class="section">
+      <div class="columns is-multiline is-mobile">
+        <div class="column is-narrow" v-for="i in params.nbGrids" :key="i">
+          <mba-grid :gridNumber="i" :nbSquares="squareMaxValue" :nbStars="starMaxValue" :squareList="[1, 2, 3, 4]" :starList="[1, 2]"></mba-grid>
+        </div>
+      </div>
     </section>
 
   </div>
 </template>
 
 <script>
+import MbaGrid from '@/components/Grid.vue'
+
 const currencyFormatter = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' });
 
 export default {
@@ -44,6 +54,9 @@ export default {
     this.params.gridType = (this.$route.query.gridType||false);
     this.params.isOption = (this.$route.query.isOption||false);
     this.params.seed = (querySeed||this.seedGenerator());
+  },
+  components: {
+    MbaGrid,
   },
   data() {
     return {
