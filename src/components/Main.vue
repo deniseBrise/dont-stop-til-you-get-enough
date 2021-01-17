@@ -1,34 +1,48 @@
 <template>
   <div>
 
-    <nav class="hero">
-      <div class="hero-body box">
-        <div class="container columns">
+    <!-- Hidden navbar to fix dinamic offset -->
+    <b-navbar>
+      <template #start>
+        <b-navbar-item>
+          <b-field label="Total">
+            <p class="title">€</p>
+          </b-field>
+        </b-navbar-item>
+      </template>
+    </b-navbar>
 
-          <div class="column">
-            <b-field label="Total">
-              <h1 class="title">
-                {{ totalPrice | currency }}
-              </h1>
-            </b-field>
-          </div>
+    <!-- Real navbar -->
+    <b-navbar class="box" centered transparent fixed-top>
+      <template #start>
 
-          <div class="column">
-            <b-field label="Nombre de grilles">
-              <b-numberinput v-model="params.nbGrids" min="0" max="10000" step="1" :exponential=".5" :editable="false" controls-position="compact" controls-rounded></b-numberinput>
-            </b-field>
-          </div>
+        <b-navbar-item class="mx-6">
+          <b-field label="Total">
+            <p class="title">{{ totalPrice | currency }}</p>
+          </b-field>
+        </b-navbar-item>
 
-          <div class="column">
-            <b-field grouped label="Jeu et Options">
-              <b-switch v-model="params.gridType" passive-type='is-primary'>{{ params.gridType ? 'Loto' : 'Euro' }}</b-switch>
-              <b-checkbox v-model="params.isOption">{{ params.gridType ? '2nd tirage' : 'Etoile+' }}</b-checkbox>
-            </b-field>
-          </div>
+        <b-navbar-item class="mx-3">
+          <b-field label="Nombre de grilles">
+            <b-numberinput v-model="params.nbGrids" min="0" max="10000" step="1" :exponential=".5" :editable="false" controls-position="compact" controls-rounded></b-numberinput>
+          </b-field>
+        </b-navbar-item>
 
-        </div>
-      </div>
-    </nav>
+        <b-navbar-item class="mx-3">
+          <b-field label="Seed">
+            <b-button type="is-primary" @click="params.seed = seedGenerator()">Suffle</b-button>
+          </b-field>
+        </b-navbar-item>
+
+        <b-navbar-item class="mx-6">
+          <b-field grouped label="Jeu et Options">
+            <b-switch v-model="params.gridType" passive-type='is-primary'>{{ params.gridType ? 'Loto' : 'Euro' }}</b-switch>
+            <b-checkbox v-model="params.isOption">{{ params.gridType ? '2nd tirage' : 'Etoile+' }}</b-checkbox>
+          </b-field>
+        </b-navbar-item>
+
+      </template>
+    </b-navbar>
 
     <section class="section">
       <div class="columns is-multiline is-mobile">
