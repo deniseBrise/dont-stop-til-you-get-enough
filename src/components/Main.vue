@@ -30,7 +30,7 @@
 
         <b-navbar-item class="mx-3">
           <b-field label="Seed">
-            <b-button type="is-primary" @click="params.seed = seedGenerator()">Suffle</b-button>
+            <b-button type="is-primary" @click="newSeed">Suffle</b-button>
           </b-field>
         </b-navbar-item>
 
@@ -47,7 +47,7 @@
     <section class="section">
       <div class="columns is-multiline is-mobile">
         <div class="column is-narrow" v-for="i in params.nbGrids" :key="i">
-          <mba-grid :gridNumber="i" :nbSquares="squareMaxValue" :nbStars="starMaxValue" :squareList="[1, 2, 3, 4]" :starList="[1, 2]"></mba-grid>
+          <mba-grid :gridNumber="i" :grid="grids[i-1]||{}" :nbSquares="squareMaxValue" :nbStars="starMaxValue"></mba-grid>
         </div>
       </div>
     </section>
@@ -62,18 +62,20 @@ const currencyFormatter = new Intl.NumberFormat('fr-FR', { style: 'currency', cu
 
 export default {
   created: function() {
-    const queryNbGrids = (this.$route.query.nbGrids||0);
     const querySeed = this.query2seed(this.$route.query.seed);
+    const queryNbGrids = (this.$route.query.nbGrids||0);
     this.params.nbGrids = (parseInt(queryNbGrids, 10)||0);
     this.params.gridType = (this.$route.query.gridType||false);
     this.params.isOption = (this.$route.query.isOption||false);
-    this.params.seed = (querySeed||this.seedGenerator());
+    this.params.seed = (querySeed||this.shuffleSeed());
   },
   components: {
     MbaGrid,
   },
   data() {
     return {
+      grids: [],
+      index: 0,
       params: {
         nbGrids: 0,
         gridType: false,
@@ -109,13 +111,18 @@ export default {
     },
   },
   methods: {
-    seedGenerator: function() {
+    shuffleSeed: function() {
       var a = Array.from({length: this.seedMaxValue}, (_, i) => i + 1);
       for (let i = a.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [a[i], a[j]] = [a[j], a[i]];
       }
       return a;
+    },
+    newSeed: function() {
+      this.index = 0;
+      this.grids = [];
+      this.params.seed = this.shuffleSeed();
     },
     seed2query: function(seed) {
       if (Array.isArray(seed)) {
@@ -144,6 +151,26 @@ export default {
         return value <= max;
       });
     },
+    nextSquareList: function() {
+      var a = [];
+      for (var i = 0 ; i < this.squareMaxNumber ; i++) {
+        a.push(this.params.seed[this.index++]);
+      }
+      return a;
+    },
+    nextStarList: function() {
+      var a = [];
+      for (var i = 0 ; i < this.starMaxNumber ; i++) {
+        a.push(this.params.seed[this.index++]);
+      }
+      return a;
+    },
+    newGrid() {
+      this.grids.push({
+        squares: this.nextSquareList(),
+        stars: this.nextStarList(),
+      });
+    },
   },
   filters: {
     currency: function(value) {
@@ -154,6 +181,7 @@ export default {
     params: {
       deep: true,
       handler() {
+        // update url query
         this.$router.push({
           query: { 
             nbGrids: this.params.nbGrids,
@@ -162,6 +190,12 @@ export default {
             seed: this.seed2query(this.params.seed),
           }
         }).catch(() => {});
+
+        // calc more grids if needed)
+        while (this.params.nbGrids - this.grids.length > 0) {
+          alert('new grid')
+          this.newGrid();
+        }
       }
     }
   }

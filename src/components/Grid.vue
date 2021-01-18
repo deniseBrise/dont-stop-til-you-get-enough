@@ -1,7 +1,10 @@
 <template>
   <div class="box">
+
     <p class="title is-3">#{{ gridNumber }}</p>
-    <table class="table subtitle is-6 is-bordered is-narrow">
+
+    <table class="table subtitle is-6 is-bordered is-narrow container">
+      <b-loading :is-full-page="false" v-model="isLoading"></b-loading>
       <tbody>
         <tr v-for="i in iSquareMax" :key="i">
           <td v-for="j in (i == iSquareMax ? jSquareMax : nbColumns)" :key="j">
@@ -11,7 +14,9 @@
           </td>
         </tr>
       </tbody>
+      
       <p>*</p>
+
       <tbody>
         <tr v-for="i in iStarMax" :key="i">
           <td v-for="j in (i == iStarMax ? jStarMax : nbColumns)" :key="j">
@@ -22,6 +27,7 @@
         </tr>
       </tbody>
     </table>
+
   </div>
 </template>
 
@@ -29,10 +35,9 @@
 export default {
   props: {
     gridNumber: Number,
+    grid: Object,
     nbSquares: Number,
     nbStars: Number,
-    squareList: Array,
-    starList: Array,
   },
   data() {
     return {
@@ -40,6 +45,9 @@ export default {
     }
   },
   computed: {
+    isLoading: function() {
+      return Object.keys(this.grid).length === 0 && this.grid.constructor === Object
+    },
     iSquareMax: function() {
       return Math.ceil(this.nbSquares / this.nbColumns);
     },
@@ -58,10 +66,16 @@ export default {
       return j + (i-1) * this.nbColumns;
     },
     isSelectedSquare: function(i, j) {
-      return this.squareList.includes(this.index(i, j));
+      if (this.grid.squares) {
+        return this.grid.squares.includes(this.index(i, j));
+      }
+      return false;
     },
     isSelectedStar: function(i, j) {
-      return this.starList.includes(this.index(i, j));
+      if (this.grid.stars) {
+        return this.grid.stars.includes(this.index(i, j));
+      }
+      return false;
     },
     selectedSquareClass: function(i, j) {
       if (this.isSelectedSquare(i, j)) {
