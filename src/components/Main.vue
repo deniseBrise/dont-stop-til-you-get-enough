@@ -57,7 +57,9 @@
 
 <script>
 import MbaGrid from '@/components/Grid.vue'
+import {Mutex} from 'async-mutex';
 
+const processingMutex = new Mutex();
 const currencyFormatter = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' });
 
 export default {
@@ -165,11 +167,26 @@ export default {
       }
       return a;
     },
-    newGrid() {
-      this.grids.push({
+    async processNewGrids() {
+      await processingMutex.runExclusive(
+        async () => {
+          while (this.grids.length < this.params.nbGrids) {
+            let grid = await this.nextGrid();
+            this.grids.push(grid);
+          }
+        }
+      );
+    },
+    async nextGrid() {
+      // sleep to simulate processing
+      await this.sleep(1000);
+      return {
         squares: this.nextSquareList(),
         stars: this.nextStarList(),
-      });
+      };
+    },
+    async sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
     },
   },
   filters: {
@@ -192,10 +209,7 @@ export default {
         }).catch(() => {});
 
         // calc more grids if needed)
-        while (this.params.nbGrids - this.grids.length > 0) {
-          alert('new grid')
-          this.newGrid();
-        }
+        this.processNewGrids();
       }
     }
   }
