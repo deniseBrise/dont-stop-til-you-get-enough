@@ -67,8 +67,8 @@ export default {
     const querySeed = this.query2seed(this.$route.query.seed);
     const queryNbGrids = (this.$route.query.nbGrids||0);
     this.params.nbGrids = (parseInt(queryNbGrids, 10)||0);
-    this.params.gridType = (this.$route.query.gridType||false);
-    this.params.isOption = (this.$route.query.isOption||false);
+    this.params.gridType = ((this.$route.query.gridType == 'true')||false);
+    this.params.isOption = ((this.$route.query.isOption == 'true')||false);
     this.params.seed = (querySeed||this.shuffleSeed());
   },
   components: {
