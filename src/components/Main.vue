@@ -77,18 +77,37 @@ export default {
   data() {
     return {
       grids: [],
-      index: 0,
       params: {
         nbGrids: 0,
         gridType: false,
         isOption: false,
         seed: [],
       },
+      index: {
+        square: 0,
+        star: 0,
+        squareCommon: 0,
+        starCommon: 0,
+        squareLoop: 0,
+        starLoop: 0,
+      },
     }
   },
   computed: {
     seedMaxValue: function() {
       return 50;
+    },
+    squareSeed: function() {
+      return this.filterSeed(this.squareMaxValue);
+    },
+    starSeed: function() {
+      return this.filterSeed(this.starMaxValue);
+    },
+    squareDraws: function() {
+      return this.grids.map(x => x.squares);
+    },
+    starDraws: function() {
+      return this.grids.map(x => x.stars);
     },
     squareMaxNumber: function() {
       return this.params.gridType ? 5 : 5;
@@ -153,19 +172,28 @@ export default {
         return value <= max;
       });
     },
-    nextSquareList: function() {
-      var a = [];
-      for (var i = 0 ; i < this.squareMaxNumber ; i++) {
-        a.push(this.params.seed[this.index++]);
+    isValidNextValue(previousDraws, currentDraw, nextValue, startFrom, commonMax) {
+      if (currentDraw.includes(nextValue)) {
+        return false;
       }
-      return a;
+      let array = currentDraw.slice(0);
+      array.push(nextValue);
+      for (const i in this.grids) {
+        if (i >= startFrom 
+          && this.hasCommonNumber(previousDraws[i], array) > commonMax) {
+          return false;
+        }
+      }
+      return true;
     },
-    nextStarList: function() {
-      var a = [];
-      for (var i = 0 ; i < this.starMaxNumber ; i++) {
-        a.push(this.params.seed[this.index++]);
+    hasCommonNumber(array1, array2) {
+      let commonNumber = 0;
+      for (const value of array1) {
+        if (array2.includes(value)) {
+          commonNumber++;
+        }
       }
-      return a;
+      return commonNumber;
     },
     async processNewGrids() {
       await processingMutex.runExclusive(
@@ -178,16 +206,45 @@ export default {
       );
     },
     async nextGrid() {
-      // sleep to simulate processing
-      await this.sleep(1000);
+      let squares = [];
+      let stars = [];
+
+      while (stars.length < this.starMaxNumber) {
+        // save initial index
+        let initIndex = this.index.star;
+        // loop until pushing a value to array
+        while (initIndex > -42) {
+          // increment start index
+          this.index.star = (this.index.star + 1) % this.starMaxValue;
+          // get seed value at index
+          let nextValue = this.starSeed[this.index.star];
+          // test if this value is acceptable considering existing grids
+          if (this.isValidNextValue(this.starDraws, stars, nextValue, this.index.starLoop, this.index.starCommon)) {
+            stars.push(nextValue);
+            break;
+          }
+          // after a full loop over seeds without success...
+          if (initIndex == this.index.star) {
+            // ...increment the number of possible common numbers
+            this.index.starCommon = (this.index.starCommon + 1) % this.starMaxNumber;
+            // if common number was reset
+            if (this.index.starCommon == 0) {
+              // set new offset to start index
+              this.index.starLoop = this.grids.length;
+            }
+            console.log('COMMON', this.index.starCommon, 'FROM', this.index.starLoop, 'AT', this.grids.length)
+          }
+        }
+      }
+
       return {
-        squares: this.nextSquareList(),
-        stars: this.nextStarList(),
+        squares,
+        stars,
       };
     },
-    async sleep(ms) {
-      return new Promise(resolve => setTimeout(resolve, ms));
-    },
+    // async sleep(ms) {
+    //   return new Promise(resolve => setTimeout(resolve, ms));
+    // },
   },
   filters: {
     currency: function(value) {
