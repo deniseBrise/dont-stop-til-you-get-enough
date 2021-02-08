@@ -83,13 +83,15 @@ export default {
         isOption: false,
         seed: [],
       },
-      index: {
-        square: 0,
-        star: 0,
-        squareCommon: 0,
-        starCommon: 0,
-        squareLoop: 0,
-        starLoop: 0,
+      squaresData: {
+        index: 0,
+        commonNumber: 0,
+        loopOffset: 0,
+      },
+      starsData: {
+        index: 0,
+        commonNumber: 0,
+        loopOffset: 0,
       },
     }
   },
@@ -172,6 +174,38 @@ export default {
         return value <= max;
       });
     },
+    nextDraw: function(seed, draws, data, maxNumber, maxValue) {
+      let draw = [];
+
+      while (draw.length < maxNumber) {
+        // save initial index
+        let initIndex = data.index;
+        // loop until pushing a value to array
+        while (initIndex > -42) {
+          // increment start index
+          data.index = (data.index + 1) % maxValue;
+          // get seed value at index
+          let nextValue = seed[data.index];
+          // test if this value is acceptable considering existing grids
+          if (this.isValidNextValue(draws, draw, nextValue, data.loopOffset, data.commonNumber)) {
+            draw.push(nextValue);
+            break;
+          }
+          // after a full loop over seeds without success...
+          if (initIndex == data.index) {
+            // ...increment the number of possible common numbers
+            data.commonNumber = (data.commonNumber + 1) % maxNumber;
+            // if common number was reset
+            if (data.commonNumber == 0) {
+              // set new offset to start index
+              data.loopOffset = draws.length;
+            }
+          }
+        }
+      }
+
+      return draw;
+    },
     isValidNextValue(previousDraws, currentDraw, nextValue, startFrom, commonMax) {
       if (currentDraw.includes(nextValue)) {
         return false;
@@ -206,40 +240,9 @@ export default {
       );
     },
     async nextGrid() {
-      let squares = [];
-      let stars = [];
-
-      while (stars.length < this.starMaxNumber) {
-        // save initial index
-        let initIndex = this.index.star;
-        // loop until pushing a value to array
-        while (initIndex > -42) {
-          // increment start index
-          this.index.star = (this.index.star + 1) % this.starMaxValue;
-          // get seed value at index
-          let nextValue = this.starSeed[this.index.star];
-          // test if this value is acceptable considering existing grids
-          if (this.isValidNextValue(this.starDraws, stars, nextValue, this.index.starLoop, this.index.starCommon)) {
-            stars.push(nextValue);
-            break;
-          }
-          // after a full loop over seeds without success...
-          if (initIndex == this.index.star) {
-            // ...increment the number of possible common numbers
-            this.index.starCommon = (this.index.starCommon + 1) % this.starMaxNumber;
-            // if common number was reset
-            if (this.index.starCommon == 0) {
-              // set new offset to start index
-              this.index.starLoop = this.grids.length;
-            }
-            console.log('COMMON', this.index.starCommon, 'FROM', this.index.starLoop, 'AT', this.grids.length)
-          }
-        }
-      }
-
       return {
-        squares,
-        stars,
+        squares: this.nextDraw(this.squareSeed, this.squareDraws, this.squaresData, this.squareMaxNumber, this.squareMaxValue),
+        stars: this.nextDraw(this.starSeed, this.starDraws, this.starsData, this.starMaxNumber, this.starMaxValue),
       };
     },
     // async sleep(ms) {
@@ -266,6 +269,7 @@ export default {
         }).catch(() => {});
 
         // calc more grids if needed)
+        this.grids = [];
         this.processNewGrids();
       }
     }
