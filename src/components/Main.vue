@@ -143,7 +143,6 @@ export default {
       return a;
     },
     newSeed: function() {
-      this.index = 0;
       this.grids = [];
       this.params.seed = this.shuffleSeed();
     },
@@ -268,8 +267,9 @@ export default {
           }
         }).catch(() => {});
 
-        // calc more grids if needed)
         this.grids = [];
+        this.squaresData.index = (this.params.seed[0] % this.squareMaxValue);
+        this.starsData.index = (this.params.seed[1] % this.starMaxValue);
         this.processNewGrids();
       }
     }
