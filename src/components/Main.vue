@@ -29,34 +29,28 @@
         </b-navbar-item>
 
         <b-navbar-item class="mx-3">
-          <b-field label="Seed">
-            <b-button type="is-primary" @click="newSeed">Suffle</b-button>
-          </b-field>
-        </b-navbar-item>
-
-        <b-navbar-item class="mx-6">
           <b-field grouped label="Jeu et Options">
             <b-switch v-model="params.gridType" passive-type='is-primary'>{{ params.gridType ? 'Loto' : 'Euro' }}</b-switch>
             <b-checkbox v-model="params.isOption">{{ params.gridType ? '2nd tirage' : 'Etoile+' }}</b-checkbox>
           </b-field>
         </b-navbar-item>
 
+        <b-navbar-item class="mx-2">
+          <b-field label="Actions">
+            <b-button @click="newSeed">Suffle</b-button>
+          </b-field>
+        </b-navbar-item>
+
       </template>
     </b-navbar>
 
-    <section class="section">
-      <div class="columns is-multiline is-mobile">
-        <div class="column is-narrow" v-for="i in params.nbGrids" :key="i">
-          <mba-grid :gridNumber="i" :grid="grids[i-1]||{}" :nbSquares="squareMaxValue" :nbStars="starMaxValue"></mba-grid>
-        </div>
-      </div>
-    </section>
+    <mba-grids :grids="grids" :nbGrids="params.nbGrids" :nbSquares="squareMaxValue" :nbStars="starMaxValue"></mba-grids>
 
   </div>
 </template>
 
 <script>
-import MbaGrid from '@/components/Grid.vue'
+import MbaGrids from '@/components/Grids.vue'
 import {Mutex} from 'async-mutex';
 
 const processingMutex = new Mutex();
@@ -72,7 +66,7 @@ export default {
     this.params.seed = (querySeed||this.shuffleSeed());
   },
   components: {
-    MbaGrid,
+    MbaGrids,
   },
   data() {
     return {
@@ -173,6 +167,29 @@ export default {
         return value <= max;
       });
     },
+    getCommonNumber(array1, array2) {
+      let commonNumber = 0;
+      for (const value of array1) {
+        if (array2.includes(value)) {
+          commonNumber++;
+        }
+      }
+      return commonNumber;
+    },
+    isValidNextValue(previousDraws, currentDraw, nextValue, startFrom, commonMax) {
+      if (currentDraw.includes(nextValue)) {
+        return false;
+      }
+      let array = currentDraw.slice(0);
+      array.push(nextValue);
+      for (const i in this.grids) {
+        if (i >= startFrom 
+          && this.getCommonNumber(previousDraws[i], array) > commonMax) {
+          return false;
+        }
+      }
+      return true;
+    },
     nextDraw: function(seed, draws, data, maxNumber, maxValue) {
       let draw = [];
 
@@ -205,48 +222,25 @@ export default {
 
       return draw;
     },
-    isValidNextValue(previousDraws, currentDraw, nextValue, startFrom, commonMax) {
-      if (currentDraw.includes(nextValue)) {
-        return false;
-      }
-      let array = currentDraw.slice(0);
-      array.push(nextValue);
-      for (const i in this.grids) {
-        if (i >= startFrom 
-          && this.hasCommonNumber(previousDraws[i], array) > commonMax) {
-          return false;
-        }
-      }
-      return true;
-    },
-    hasCommonNumber(array1, array2) {
-      let commonNumber = 0;
-      for (const value of array1) {
-        if (array2.includes(value)) {
-          commonNumber++;
-        }
-      }
-      return commonNumber;
-    },
     async processNewGrids() {
-      await processingMutex.runExclusive(
-        async () => {
+      // use a different starting index for squares and stars
+      if (this.grids.length == 0) {
+        this.squaresData.index = (this.params.seed[0] % this.squareMaxValue);
+        this.starsData.index = (this.params.seed[1] % this.starMaxValue);
+      }
+      // fill grids with generated values
+      processingMutex.runExclusive(
+        () => {
           while (this.grids.length < this.params.nbGrids) {
-            let grid = await this.nextGrid();
-            this.grids.push(grid);
+            this.grids.push(
+            {
+              squares: this.nextDraw(this.squareSeed, this.squareDraws, this.squaresData, this.squareMaxNumber, this.squareMaxValue),
+              stars: this.nextDraw(this.starSeed, this.starDraws, this.starsData, this.starMaxNumber, this.starMaxValue),
+            });
           }
         }
       );
     },
-    async nextGrid() {
-      return {
-        squares: this.nextDraw(this.squareSeed, this.squareDraws, this.squaresData, this.squareMaxNumber, this.squareMaxValue),
-        stars: this.nextDraw(this.starSeed, this.starDraws, this.starsData, this.starMaxNumber, this.starMaxValue),
-      };
-    },
-    // async sleep(ms) {
-    //   return new Promise(resolve => setTimeout(resolve, ms));
-    // },
   },
   filters: {
     currency: function(value) {
@@ -266,13 +260,21 @@ export default {
             seed: this.seed2query(this.params.seed),
           }
         }).catch(() => {});
-
-        this.grids = [];
-        this.squaresData.index = (this.params.seed[0] % this.squareMaxValue);
-        this.starsData.index = (this.params.seed[1] % this.starMaxValue);
+      }
+    },
+    'params.nbGrids': function() {
+      if (this.grids.length < this.params.nbGrids) {
         this.processNewGrids();
       }
-    }
+    },
+    'params.gridType': function() {
+      this.grids = [];
+      this.processNewGrids();
+    },
+    'params.seed': function() {
+      this.grids = [];
+      this.processNewGrids();
+    },
   }
 }
 </script>
