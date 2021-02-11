@@ -1,7 +1,7 @@
 <template>
   <div>
 
-    <!-- Hidden navbar to fix dinamic offset -->
+    <!-- Hidden navbar to fix dynamic offset -->
     <b-navbar>
       <template #start>
         <b-navbar-item>
@@ -38,19 +38,23 @@
         <b-navbar-item class="mx-2">
           <b-field label="Actions">
             <b-button @click="newSeed">Suffle</b-button>
+            <b-button :type="{ 'is-primary': params.isVerify }" @click="params.isVerify = !params.isVerify">Verify</b-button>
           </b-field>
         </b-navbar-item>
 
       </template>
     </b-navbar>
 
-    <mba-grids :grids="grids" :nbGrids="params.nbGrids" :nbSquares="squareMaxValue" :nbStars="starMaxValue"></mba-grids>
+    <mba-draw v-if="params.isVerify" :maxSquares="squareMaxValue" :maxStars="starMaxValue" :nbSquares="squareMaxNumber" :nbStars="starMaxNumber"></mba-draw>
+
+    <mba-grids :grids="grids" :nbGrids="params.nbGrids" :maxSquares="squareMaxValue" :maxStars="starMaxValue"></mba-grids>
 
   </div>
 </template>
 
 <script>
 import MbaGrids from '@/components/Grids.vue'
+import MbaDraw from '@/components/Draw.vue'
 import {Mutex} from 'async-mutex';
 
 const processingMutex = new Mutex();
@@ -64,9 +68,12 @@ export default {
     this.params.gridType = ((this.$route.query.gridType == 'true')||false);
     this.params.isOption = ((this.$route.query.isOption == 'true')||false);
     this.params.seed = (querySeed||this.shuffleSeed());
+    this.params.isVerify = ((this.$route.query.isVerify == 'true')||false);
+    this.params.draw = (this.query2draw(this.$route.query.draw)||{});
   },
   components: {
     MbaGrids,
+    MbaDraw,
   },
   data() {
     return {
@@ -76,6 +83,8 @@ export default {
         gridType: false,
         isOption: false,
         seed: [],
+        isVerify: false,
+        draw: {},
       },
       squaresData: {
         index: 0,
@@ -162,15 +171,46 @@ export default {
       }
       return null;
     },
+    draw2query: function(draw) {
+      let array = [].concat(((draw||{}).squares||[])).concat(((draw||{}).stars||[]));
+      if (array.length > 0) {
+        return array.join();
+      }
+      return null;
+    },
+    query2draw: function(query) {
+      if (typeof query == 'string') {
+        query = query.split(',').map(function(value) {
+          return parseInt(value);
+        });
+        if (query.length == (this.squareMaxNumber + this.starMaxNumber)) {
+          const squares = query.slice(0, this.squareMaxNumber);
+          const stars = query.slice(this.squareMaxNumber);
+          for (const square of squares) {
+            console.log(square, this.getCommonNumber(squares, [ square ]))
+            if (square <= 0 || square > this.squareMaxValue || this.getCommonNumber(squares, [ square ]) != 1) {
+              return null;
+            }
+          }
+          for (const star of stars) {
+            if (star <= 0 || star > this.starMaxValue || this.getCommonNumber(stars, [ star ]) != 1) {
+              return null;
+            }
+          }
+          return { squares, stars };
+        }
+      }
+      return null;
+    },
     filterSeed: function(max) {
       return this.params.seed.filter(function (value) {
         return value <= max;
       });
     },
-    getCommonNumber(array1, array2) {
+    getCommonNumber(valueList, refArray) {
       let commonNumber = 0;
-      for (const value of array1) {
-        if (array2.includes(value)) {
+      for (const value of valueList) {
+        if (refArray.includes(value)) {
           commonNumber++;
         }
       }
@@ -258,6 +298,8 @@ export default {
             gridType: this.params.gridType,
             isOption: this.params.isOption,
             seed: this.seed2query(this.params.seed),
+            isVerify: this.params.isVerify,
+            draw: this.draw2query(this.params.draw),
           }
         }).catch(() => {});
       }

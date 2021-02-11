@@ -36,8 +36,8 @@ export default {
   props: {
     gridNumber: Number,
     grid: Object,
-    nbSquares: Number,
-    nbStars: Number,
+    maxSquares: Number,
+    maxStars: Number,
   },
   data() {
     return {
@@ -49,16 +49,16 @@ export default {
       return Object.keys(this.grid).length === 0 && this.grid.constructor === Object
     },
     iSquareMax: function() {
-      return Math.ceil(this.nbSquares / this.nbColumns);
+      return Math.ceil(this.maxSquares / this.nbColumns);
     },
     jSquareMax: function() {
-      return (this.nbSquares % this.nbColumns) || this.nbColumns;
+      return (this.maxSquares % this.nbColumns) || this.nbColumns;
     },
     iStarMax: function() {
-      return Math.ceil(this.nbStars / this.nbColumns);
+      return Math.ceil(this.maxStars / this.nbColumns);
     },
     jStarMax: function() {
-      return (this.nbStars % this.nbColumns) || this.nbColumns;
+      return (this.maxStars % this.nbColumns) || this.nbColumns;
     },
   },
   methods: {
