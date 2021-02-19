@@ -36,7 +36,6 @@ export default {
   },
   computed: {
     draw: function() {
-      console.log(this.str2draw(this.drawStr))
       return this.str2draw(this.drawStr);
     },
     isValidDraw: function() {
@@ -84,12 +83,14 @@ export default {
   },
   methods: {
     draw2str: function(draw) {
+      let drawSquares = ((draw||{}).squares||[]);
+      let drawStars = ((draw||{}).stars||[]);
       let squares = '';
       let stars = '';
-      for (let square of draw.squares) {
+      for (let square of drawSquares) {
         squares += (squares.length == 0 ? '' : '-') + square;
       }
-      for (let star of draw.stars) {
+      for (let star of drawStars) {
         stars += (stars.length == 0 ? '*' : '-') + star;
       }
       return squares + stars;
@@ -100,13 +101,11 @@ export default {
     isValid: function(draw) {
       if ((((draw||{}).squares||[]).length == this.nbSquares) && (((draw||{}).stars||[]).length == this.nbStars)) {
         for (let square of draw.squares) {
-          console.log(square, isNaN(square), square < 1, square > this.maxSquares, draw.squares.filter(x => x == square).length != 1)
           if (isNaN(square) || square < 1 || square > this.maxSquares || draw.squares.filter(x => x == square).length != 1) {
             return false;
           }
         }
         for (let star of draw.stars) {
-          console.log(star, isNaN(star), star < 1, star > this.maxStars, draw.stars.filter(x => x == star).length != 1)
           if (isNaN(star) || star < 1 || star > this.maxStars || draw.stars.filter(x => x == star).length != 1) {
             return false;
           }

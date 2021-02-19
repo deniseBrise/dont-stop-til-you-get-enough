@@ -45,9 +45,18 @@
       </template>
     </b-navbar>
 
-    <mba-draw v-if="params.isVerify" @setFilter="setDraw" :initialFilter="params.draw" :maxSquares="squareMaxValue" :maxStars="starMaxValue" :nbSquares="squareMaxNumber" :nbStars="starMaxNumber"></mba-draw>
+    <div v-if="params.isVerify">
+      <mba-draw @setFilter="setDraw" :initialFilter="params.draw" :maxSquares="squareMaxValue" :maxStars="starMaxValue" :nbSquares="squareMaxNumber" :nbStars="starMaxNumber"></mba-draw>
 
-    <mba-grids :grids="grids" :nbGrids="params.nbGrids" :maxSquares="squareMaxValue" :maxStars="starMaxValue"></mba-grids>
+      <div class="section columns is-multiline is-mobile" v-for="draw in bestDraws" v-show="draw.grids.length" :key="draw.rank">
+        <p class="title is-1">{{draw.rank}} bon{{ draw.rank>1?'s':'' }} numéro{{ draw.rank>1?'s':'' }}</p>
+        <mba-grids :grids="draw.grids" :nbGrids="draw.grids.length" :maxSquares="squareMaxValue" :maxStars="starMaxValue"></mba-grids>
+      </div>  
+    </div>
+
+    <div v-else>
+      <mba-grids :grids="grids" :nbGrids="params.nbGrids" :maxSquares="squareMaxValue" :maxStars="starMaxValue"></mba-grids>
+    </div>
 
   </div>
 </template>
@@ -126,6 +135,9 @@ export default {
     starMaxValue: function() {
       return this.params.gridType ? 10 : 12;
     },
+    totalNumber: function() {
+      return this.squareMaxNumber + this.starMaxNumber;
+    },
     gridPrice: function() {
       return this.params.gridType ? 2.20 : 2.50;
     },
@@ -134,6 +146,14 @@ export default {
     },
     totalPrice: function() {
       return this.params.nbGrids * (this.gridPrice + (this.params.isOption ? this.optionPrice : 0));
+    },
+    bestDraws: function() {
+      let bestDraws = [];
+      for (let i = this.squareMaxNumber + this.starMaxNumber ; i > 0 ; i--) {
+        let grids = this.getBestGrids(i);
+        bestDraws.push({ rank: i, grids: grids });
+      }
+      return bestDraws;
     },
   },
   methods: {
@@ -187,7 +207,6 @@ export default {
           const squares = query.slice(0, this.squareMaxNumber);
           const stars = query.slice(this.squareMaxNumber);
           for (const square of squares) {
-            console.log(square, this.getCommonNumber(squares, [ square ]))
             if (square <= 0 || square > this.squareMaxValue || this.getCommonNumber(squares, [ square ]) != 1) {
               return null;
             }
@@ -210,16 +229,18 @@ export default {
         return value <= max;
       });
     },
-    getCommonNumber(valueList, refArray) {
+    getCommonNumber: function(valueList, refArray) {
       let commonNumber = 0;
-      for (const value of valueList) {
-        if (refArray.includes(value)) {
-          commonNumber++;
+      if (valueList && refArray) {
+        for (const value of valueList) {
+          if (refArray.includes(value)) {
+            commonNumber++;
+          }
         }
       }
       return commonNumber;
     },
-    isValidNextValue(previousDraws, currentDraw, nextValue, startFrom, commonMax) {
+    isValidNextValue: function(previousDraws, currentDraw, nextValue, startFrom, commonMax) {
       if (currentDraw.includes(nextValue)) {
         return false;
       }
@@ -284,6 +305,15 @@ export default {
         }
       );
     },
+    getBestGrids: function(rank) {
+      let getCommonNumber = this.getCommonNumber;
+      let draw = this.params.draw;
+      let grids = this.grids;
+      let nbGrids = this.params.nbGrids;
+      return grids.filter(function (grid) {
+          return grids.indexOf(grid) < nbGrids && getCommonNumber(grid.squares, draw.squares) + getCommonNumber(grid.stars, draw.stars) == rank;
+        });
+    },
   },
   filters: {
     currency: function(value) {
@@ -314,6 +344,7 @@ export default {
     },
     'params.gridType': function() {
       this.grids = [];
+      this.params.draw = {};
       this.processNewGrids();
     },
     'params.seed': function() {
