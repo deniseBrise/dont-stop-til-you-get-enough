@@ -7,7 +7,7 @@
         <b-field label="Tirage à vérifier" :type="inputType" :message="inputMessage">
           <b-input v-model="drawStr" :placeholder="inputPlaceholder"></b-input>
           <p class="control">
-            <b-button class="button is-primary" :disabled="!isValidDraw">Go</b-button>
+            <b-button class="button is-primary" :disabled="!isValidDraw" @click="setFilter">Go</b-button>
           </p>
         </b-field>
       </div>
@@ -19,7 +19,11 @@
 
 <script>
 export default {
+  mounted: function() {
+    this.drawStr = this.draw2str(this.initialFilter);
+  },
   props: {
+    initialFilter: Object,
     maxSquares: Number,
     maxStars: Number,
     nbSquares: Number,
@@ -110,6 +114,11 @@ export default {
         return true;
       }
       return false;
+    },
+    setFilter: function() {
+      if (this.isValidDraw) {
+        this.$emit('setFilter', this.draw);
+      }
     },
   },
 }

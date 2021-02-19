@@ -45,7 +45,7 @@
       </template>
     </b-navbar>
 
-    <mba-draw v-if="params.isVerify" :maxSquares="squareMaxValue" :maxStars="starMaxValue" :nbSquares="squareMaxNumber" :nbStars="starMaxNumber"></mba-draw>
+    <mba-draw v-if="params.isVerify" @setFilter="setDraw" :initialFilter="params.draw" :maxSquares="squareMaxValue" :maxStars="starMaxValue" :nbSquares="squareMaxNumber" :nbStars="starMaxNumber"></mba-draw>
 
     <mba-grids :grids="grids" :nbGrids="params.nbGrids" :maxSquares="squareMaxValue" :maxStars="starMaxValue"></mba-grids>
 
@@ -201,6 +201,9 @@ export default {
         }
       }
       return null;
+    },
+    setDraw: function(draw) {
+      this.params.draw = draw;
     },
     filterSeed: function(max) {
       return this.params.seed.filter(function (value) {
