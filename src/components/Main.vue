@@ -30,7 +30,7 @@
 
         <b-navbar-item class="mx-3">
           <b-field grouped label="Jeu et Options">
-            <b-switch v-model="params.gridType" passive-type='is-primary'>{{ params.gridType ? 'Loto' : 'Euro' }}</b-switch>
+            <b-switch v-model="params.gridType" @input="params.draw = {}" passive-type='is-primary'>{{ params.gridType ? 'Loto' : 'Euro' }}</b-switch>
             <b-checkbox v-model="params.isOption">{{ params.gridType ? '2nd tirage' : 'Etoile+' }}</b-checkbox>
           </b-field>
         </b-navbar-item>
@@ -344,7 +344,6 @@ export default {
     },
     'params.gridType': function() {
       this.grids = [];
-      this.params.draw = {};
       this.processNewGrids();
     },
     'params.seed': function() {
