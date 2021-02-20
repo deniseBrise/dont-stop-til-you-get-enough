@@ -49,7 +49,7 @@
       <mba-draw @setFilter="setDraw" :initialFilter="params.draw" :maxSquares="squareMaxValue" :maxStars="starMaxValue" :nbSquares="squareMaxNumber" :nbStars="starMaxNumber"></mba-draw>
 
       <div class="section columns is-multiline is-mobile" v-for="draw in bestDraws" v-show="draw.grids.length" :key="draw.rank">
-        <p class="title is-1">{{draw.rank}} bon{{ draw.rank>1?'s':'' }} numéro{{ draw.rank>1?'s':'' }}</p>
+        <p class="title is-1">{{ rankTitle(draw.rank, squareMaxNumber + starMaxNumber) }}</p>
         <mba-grids :grids="draw.grids" :nbGrids="draw.grids.length" :maxSquares="squareMaxValue" :maxStars="starMaxValue"></mba-grids>
       </div>  
     </div>
@@ -223,6 +223,12 @@ export default {
     },
     setDraw: function(draw) {
       this.params.draw = draw;
+    },
+    rankTitle: function(rank, max) {
+      if (rank == max) {
+        return 'Tous les bons numéros !!! BANG BANG';
+      }
+      return rank + ' bon' + (rank > 1 ? 's' : '') + ' numéro' + (rank > 1 ? 's' : '');
     },
     filterSeed: function(max) {
       return this.params.seed.filter(function (value) {
