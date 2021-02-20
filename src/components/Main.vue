@@ -16,9 +16,14 @@
     <b-navbar class="box" centered transparent fixed-top>
       <template #start>
 
-        <b-navbar-item class="mx-6">
+        <b-navbar-item class="mx-1">
           <b-field label="Total">
             <p class="title">{{ totalPrice | currency }}</p>
+          </b-field>
+        </b-navbar-item>
+        <b-navbar-item class="mx-3">
+          <b-field label="Gain">
+            <p class="title is-4">{{ estimatedGain | currency }}</p>
           </b-field>
         </b-navbar-item>
 
@@ -147,6 +152,13 @@ export default {
     totalPrice: function() {
       return this.params.nbGrids * (this.gridPrice + (this.params.isOption ? this.optionPrice : 0));
     },
+    estimatedGain: function() {
+      let gain = 0;
+      for (let i = 0 ; i < this.params.nbGrids ; i++) {
+        gain += this.estimateGridGain(this.grids[i]);
+      }
+      return gain;
+    },
     bestDraws: function() {
       let bestDraws = [];
       for (let i = this.squareMaxNumber + this.starMaxNumber ; i > 0 ; i--) {
@@ -229,6 +241,108 @@ export default {
         return 'Tous les bons numéros !!! BANG BANG';
       }
       return rank + ' bon' + (rank > 1 ? 's' : '') + ' numéro' + (rank > 1 ? 's' : '');
+    },
+    estimateGridGain: function(grid) {
+      let nbSquare = this.getCommonNumber(((grid||{}).squares||[]), this.params.draw.squares);
+      let nbStar = this.getCommonNumber(((grid||{}).stars||[]), this.params.draw.stars);
+      if (this.params.gridType) {
+        return this.estimateLotoGain(nbSquare, nbStar, this.params.isOption);
+      }
+      return this.estimateEuroGain(nbSquare, nbStar, this.params.isOption);
+    },
+    estimateLotoGain(nbSquare, nbStar) {
+      if (nbSquare == 5) {
+        return nbStar == 1 ? 2000000 : 100000;
+      }
+      if (nbSquare == 4) {
+        return nbStar == 1 ? 1000 : 400;
+      }
+      if (nbSquare == 3) {
+        return nbStar == 1 ? 50 : 20;
+      }
+      if (nbSquare == 2) {
+        return nbStar == 1 ? 10 : 4.40;
+      }
+      if (nbStar == 1) {
+        return 2.20;
+      }
+      return 0;
+    },
+    estimateSuperLotoGain(nbSquare, nbStar) {
+      if (nbSquare == 5) {
+        return nbStar == 1 ? 13000000 : 150000;
+      }
+      if (nbSquare == 4) {
+        return nbStar == 1 ? 2000 : 1000;
+      }
+      if (nbSquare == 3) {
+        return nbStar == 1 ? 100 : 50;
+      }
+      if (nbSquare == 2) {
+        return nbStar == 1 ? 20 : 8;
+      }
+      if (nbStar == 1) {
+        return 3;
+      }
+      return 0;
+    },
+    estimateGrandLotoGain(nbSquare, nbStar) {
+      if (nbSquare == 5) {
+        return nbStar == 1 ? 15000000 : 200000;
+      }
+      if (nbSquare == 4) {
+        return nbStar == 1 ? 5000 : 2000;
+      }
+      if (nbSquare == 3) {
+        return nbStar == 1 ? 200 : 100;
+      }
+      if (nbSquare == 2) {
+        return nbStar == 1 ? 30 : 12;
+      }
+      if (nbStar == 1) {
+        return 5;
+      }
+      return 0;
+    },
+    estimateEuroGain(nbSquare, nbStar, option) {
+      if (nbSquare == 5) {
+        if (nbStar == 2)
+          return 210000000;
+        if (nbStar == 1)
+          return option ? 204933 : 200738;
+        return 20851;
+      }
+      if (nbSquare == 4) {
+        if (nbStar == 2)
+          return option ? 1597 : 1299;
+        if (nbStar == 1)
+          return option ? 138 : 120;
+        return 39;
+      }
+      if (nbSquare == 3) {
+        if (nbStar == 2)
+          return option ? 66 : 57;
+        if (nbStar == 1)
+          return option ? 14.10 : 11.26;
+        return 9.32;
+      }
+      if (nbSquare == 2) {
+        if (nbStar == 2)
+          return option ? 16 : 14;
+        if (nbStar == 1)
+          return option ? 8.02 : 5.58;
+        return 4;
+      }
+      if (nbSquare == 1) {
+        if (nbStar == 2)
+          return option ? 10.30 : 6.75;
+        return 0;
+      }
+      if (nbStar == 2)
+        return option ? 10.03 : 0;
+      if (nbStar == 1)
+        return option ? 2.50 : 0;
+      return 0;
     },
     filterSeed: function(max) {
       return this.params.seed.filter(function (value) {
