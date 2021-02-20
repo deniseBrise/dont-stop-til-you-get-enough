@@ -36,6 +36,7 @@ export default {
   props: {
     gridNumber: Number,
     grid: Object,
+    draw: Object,
     maxSquares: Number,
     maxStars: Number,
   },
@@ -67,25 +68,43 @@ export default {
     },
     isSelectedSquare: function(i, j) {
       if (this.grid.squares) {
-        return this.grid.squares.includes(this.index(i, j));
+        return (this.grid.squares||[]).includes(this.index(i, j));
       }
       return false;
     },
     isSelectedStar: function(i, j) {
       if (this.grid.stars) {
-        return this.grid.stars.includes(this.index(i, j));
+        return (this.grid.stars||[]).includes(this.index(i, j));
+      }
+      return false;
+    },
+    isDrawSquare: function(i, j) {
+      if (this.grid.squares) {
+        return (this.draw.squares||[]).includes(this.index(i, j));
+      }
+      return false;
+    },
+    isDrawStar: function(i, j) {
+      if (this.grid.stars) {
+        return (this.draw.stars||[]).includes(this.index(i, j));
       }
       return false;
     },
     selectedSquareClass: function(i, j) {
       if (this.isSelectedSquare(i, j)) {
-        return ['has-text-info', 'has-text-weight-bold' ];
+        if (this.isDrawSquare(i, j)) {
+          return [ 'has-text-info', 'has-text-weight-bold', 'has-background-warning' ];
+        }
+        return [ 'has-text-info', 'has-text-weight-bold' ];
       }
       return [ 'has-text-grey-light' ];
     },
     selectedStarClass: function(i, j) {
       if (this.isSelectedStar(i, j)) {
-        return ['has-text-danger', 'has-text-weight-bold' ];
+        if (this.isDrawStar(i, j)) {
+          return [ 'has-text-danger', 'has-text-weight-bold', 'has-background-warning' ];
+        }
+        return [ 'has-text-danger', 'has-text-weight-bold' ];
       }
       return [ 'has-text-grey-light' ];
     },

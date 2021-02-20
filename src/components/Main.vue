@@ -50,12 +50,12 @@
 
       <div class="section columns is-multiline is-mobile" v-for="draw in bestDraws" v-show="draw.grids.length" :key="draw.rank">
         <p class="title is-1">{{ rankTitle(draw.rank, squareMaxNumber + starMaxNumber) }}</p>
-        <mba-grids :grids="draw.grids" :nbGrids="draw.grids.length" :maxSquares="squareMaxValue" :maxStars="starMaxValue"></mba-grids>
+        <mba-grids :grids="draw.grids" :nbGrids="draw.grids.length" :draw="params.draw" :maxSquares="squareMaxValue" :maxStars="starMaxValue"></mba-grids>
       </div>  
     </div>
 
     <div v-else>
-      <mba-grids :grids="grids" :nbGrids="params.nbGrids" :maxSquares="squareMaxValue" :maxStars="starMaxValue"></mba-grids>
+      <mba-grids :grids="grids" :nbGrids="params.nbGrids" :draw="{}" :maxSquares="squareMaxValue" :maxStars="starMaxValue"></mba-grids>
     </div>
 
   </div>
