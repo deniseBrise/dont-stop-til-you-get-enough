@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-from game_base import Game, GameConfig, DrawResult, Prediction
+from src.games.game_base import Game, GameConfig, DrawResult, Prediction
 
 
 # Loto price constants

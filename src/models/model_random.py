@@ -4,7 +4,7 @@ import random
 from dataclasses import dataclass
 from datetime import datetime
 
-from model_base import Model, ModelConfig, ModelPrediction
+from src.models.model_base import Model, ModelConfig, ModelPrediction
 
 
 @dataclass

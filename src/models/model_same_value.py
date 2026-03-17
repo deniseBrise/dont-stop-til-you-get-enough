@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-from model_base import Model, ModelConfig, ModelPrediction
+from src.models.model_base import Model, ModelConfig, ModelPrediction
 
 
 @dataclass
