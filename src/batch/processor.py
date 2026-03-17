@@ -80,7 +80,10 @@ class BatchProcessor:
                 iterations,
             ),
         )
-        batch_id = cursor.lastrowid
+        batch_id_raw = cursor.lastrowid
+        if batch_id_raw is None:
+            raise ValueError("Failed to create batch")
+        batch_id: int = batch_id_raw
         conn.commit()
         conn.close()
 
