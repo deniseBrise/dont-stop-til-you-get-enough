@@ -278,6 +278,10 @@ def show_same_value_config():
             "Numéro complémentaire", min_value=1, max_value=10, value=6
         )
 
+    # Initialize for template
+    etoiles = [1, 2]
+    numero_comp = 6
+
     if st.button("Valider le modèle"):
         if is_euromillion:
             st.session_state.model_config = {
