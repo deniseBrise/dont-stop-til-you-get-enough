@@ -1,0 +1,274 @@
+' ==========================================================================
+' dont-stop-til-you-get-enough — Wireframes (PlantUML Salt) de toutes les vues.
+' PROPOSITION dérivée de SPECS.md v0.1.0 (§ 11, exigences FR1-FR34).
+' Aucun code n'existe encore ; le parcours exact de chaque vue est défini
+' par le jeu (SPECS § 4.1) et sera ajusté à l'implémentation.
+'
+' [EXEMPLE] Toutes les valeurs affichées (dates, numéros, ROI, pourcentages,
+' identifiants de batch…) sont des données d'illustration [FICTIF].
+'
+' Chaque bloc salt produit une image séparée (vues 01 à 11).
+' ==========================================================================
+
+@startsalt vue-01-dashboard
+title 01 — Dashboard d'accueil (FR1, FR3, FR27)
+{+
+  {/ <b>Dashboard</b> | Données | Analyses | Résultats | Comparaison }
+  {
+    <b>DONT STOP TIL YOU GET ENOUGH</b> | Langue : ^Français^
+  }
+  ..
+  Sélectionnez un jeu :
+  {#
+    . | <b>Loto (FDJ)</b> | <b>Euromillion (FDJ)</b> | <b>Video Poker</b>
+    Logo | <&image> | <&image> | <&image>
+    Règles | 5/49 + 1/10 | 5/50 + 2 étoiles | Jacks or Better
+    . | [Jouer] | [Jouer] | [Jouer]
+  }
+  ..
+  {
+    État des données : dernier téléchargement FDJ le 12/09/2026 [EXEMPLE] — nouveaux tirages disponibles | [Mettre à jour]
+  }
+}
+@endsalt
+
+@startsalt vue-02-config-jeu-loterie
+title 02 — Configuration du jeu : Loto (FDJ) (FR6)
+{+
+  {/ Dashboard | <b>Config jeu</b> | Modèle | Batch | Résultats }
+  {^"Grilles et mise"
+    Nombre de grilles | "5 "
+    Mise par grille | ^2,20 EUR^
+    Variante | ^Loto^ (Grand-Loto / Super-Loto : point ouvert § 18.4)
+  }
+  {^"Options"
+    [X] 2nd tirage
+    [ ] Joker+
+  }
+  {^"Plage de tirages historiques"
+    Du | "01/01/2020 " | Au | "12/09/2026 "
+  }
+  ..
+  [<- Retour] | [Suivant : modèle ->]
+}
+@endsalt
+
+@startsalt vue-03-config-modele
+title 03 — Configuration du modèle (FR9, FR10)
+{+
+  {/ Dashboard | Config jeu | <b>Modèle</b> | Batch | Résultats }
+  Modèle | ^Fréquences / chauds-froids^
+  (seuls les modèles compatibles avec le jeu sont proposés)
+  ..
+  {^"Paramètres du modèle — Fréquences"
+    Fenêtre d'analyse | "100 derniers tirages "
+    Mode | ( ) Numéros chauds
+    . | (X) Numéros froids
+    . | ( ) Équilibré
+  }
+  ..
+  [<- Retour] | [Suivant : lancement ->]
+}
+@endsalt
+
+@startsalt vue-04-batch-live
+title 04 — Lancement du batch et progression live (FR12-FR16, FR33)
+{+
+  {/ Dashboard | Config jeu | Modèle | <b>Batch</b> | Résultats }
+  {
+    Itérations : | "10000 " | [-] | [+] | [Lancer] | [Arrêter proprement]
+  }
+  {
+    Workers CPU : | ^4^ | (ajustable en live)
+  }
+  ..
+  {+
+    <b>Batch #42</b> [FICTIF] — en cours
+    Progression : ################-------------- 45 % (4 500 / 10 000 itérations)
+  }
+  ..
+  Résultats en direct :
+  {SI
+    {#
+      Itération | Tirage du | Grille jouée | Résultat | Gain | Coût
+      4500 | 12/09/2026 | 7-13-21-34-48 + 3 | 2 bons numéros | 0,00 EUR | 2,20 EUR
+      4499 | 09/09/2026 | 1-13-25-34-47 + 7 | 3 bons numéros | 10,40 EUR | 2,20 EUR
+      4498 | 07/09/2026 | 13-21-22-34-41 + 3 | 1 bon numéro | 0,00 EUR | 2,20 EUR
+    }
+  }
+  ..
+  (valeurs [FICTIF] — rafraîchissement quasi temps réel, § 18.1)
+}
+@endsalt
+
+@startsalt vue-05-resultats
+title 05 — Résultats d'un batch (FR28, FR31)
+{+
+  {/ Dashboard | Config jeu | Modèle | Batch | <b>Résultats</b> }
+  Batch | ^#42 — Loto x Fréquences^
+  ..
+  {#
+    Métrique | Valeur
+    ROI | -32,5 %
+    Gains totaux | 6 750,00 EUR
+    Coût total | 10 000,00 EUR
+    Bons numéros (min) | 0
+    Bons numéros (max) | 5
+    Bons numéros (moy) | 1,7
+  }
+  (métriques [FICTIF] — propres au jeu, SPECS § 10)
+  ..
+  {+
+    <b>Graphique associé (Plotly)</b>
+    .
+    "  Courbe des gains cumulés / distribution des gains — emplacement réservé  "
+    .
+  }
+}
+@endsalt
+
+@startsalt vue-06-comparaison
+title 06 — Comparaison de batchs (FR29, FR30)
+{+
+  {/ Dashboard | Config jeu | Modèle | Batch | Résultats | <b>Comparaison</b> }
+  {
+    Jeu : ^Tous^ | Modèle : ^Tous^ | Statut : ^Terminés^ | Regrouper par : ^Modèle^ | [Appliquer]
+  }
+  ..
+  {SI
+    {#
+      . | Batch #42 | Batch #43 | Batch #44
+      Jeu | Loto | Loto | Euromillion
+      Modèle | Fréquences | Aléatoire | Fréquences
+      Itérations | 10 000 | 10 000 | 5 000
+      ROI | -32,5 % | -35,1 % | -28,9 %
+      Gains totaux | 6 750 EUR | 6 490 EUR | 3 555 EUR
+      Coût total | 10 000 EUR | 10 000 EUR | 5 000 EUR
+    }
+  }
+  (données [FICTIF] — tri, filtres, group by via AG Grid Community)
+  ..
+  {+
+    <b>Graphique comparatif (Plotly)</b>
+    .
+    "  ROI par modèle — emplacement réservé  "
+    .
+  }
+}
+@endsalt
+
+@startsalt vue-07-aide-loterie
+title 07 — Aide au jeu : grilles suggérées, loteries (FR19)
+{+
+  {/ Dashboard | <b>Aide au jeu</b> | Analyses }
+  {
+    Jeu : ^Loto (FDJ)^ | Modèle : ^Fréquences^ | Nb de grilles : | "5 " | [Générer]
+  }
+  ..
+  {#
+    Grille | Numéros | Complémentaire
+    1 | 4 - 13 - 21 - 34 - 45 | 7
+    2 | 2 - 11 - 26 - 33 - 48 | 3
+    3 | 9 - 13 - 19 - 28 - 41 | 10
+    4 | 1 - 13 - 22 - 34 - 47 | 5
+    5 | 6 - 17 - 21 - 30 - 44 | 2
+  }
+  (grilles [FICTIF] — suggestions selon modèle et/ou analyse)
+  ..
+  [Régénérer] | [Imprimer]
+}
+@endsalt
+
+@startsalt vue-08-aide-video-poker
+title 08 — Aide au jeu : Video Poker, stratégie de conservation (FR20)
+{+
+  {/ Dashboard | <b>Aide au jeu</b> | Analyses }
+  {
+    [Distribuer une main] | Stratégie : ^Optimale (Jacks or Better)^
+  }
+  ..
+  {#
+    Carte 1 | Carte 2 | Carte 3 | Carte 4 | Carte 5
+    As de Pique | Roi de Pique | Dame de Pique | 9 de Trèfle | 2 de Coeur
+    [X] Garder | [X] Garder | [X] Garder | [ ] Garder | [ ] Garder
+  }
+  ..
+  {+
+    <b>Recommandation de la stratégie</b>
+    Conserver As-Roi-Dame de Pique (tirage de quinte flush royale) [EXEMPLE]
+  }
+  ..
+  [Tirer les cartes remplacées] | Gain : selon table de paiement 9/6
+}
+@endsalt
+
+@startsalt vue-09-analyse-statistique
+title 09 — Analyse statistique des données (FR21, FR22)
+{+
+  {/ Dashboard | Aide au jeu | <b>Analyses</b> }
+  {
+    Jeu : ^Loto (FDJ)^ | Période : ^Tous les tirages^ | [Analyser]
+  }
+  {/ <b>Fréquences</b> | Écarts | Distributions }
+  {+
+    <b>Graphique (Plotly)</b>
+    .
+    "  Fréquence de sortie par numéro — emplacement réservé  "
+    .
+  }
+  ..
+  {SI
+    {#
+      Numéro | Sorties | Fréquence | Écart actuel | Écart max
+      13 | 287 | 5,9 % | 3 | 41
+      21 | 279 | 5,7 % | 0 | 38
+      34 | 266 | 5,5 % | 12 | 45
+      7 | 251 | 5,2 % | 5 | 52
+    }
+  }
+  (statistiques [FICTIF] — gros tableaux AG Grid : tri, filtres, pagination)
+}
+@endsalt
+
+@startsalt vue-10-donnees
+title 10 — Gestion des données (FR23-FR27)
+{+
+  {/ Dashboard | <b>Données</b> | Analyses }
+  {/ <b>Loteries (FDJ)</b> | <b>Video Poker</b> }
+  {^"Téléchargement automatique FDJ"
+    Loto : dernier téléchargement le 12/09/2026 [EXEMPLE] — à jour
+    Euromillion : dernier téléchargement le 10/09/2026 [EXEMPLE] — nouvelles données disponibles
+    [Télécharger maintenant]
+    (échec réseau : nouvelles tentatives automatiques avec backoff)
+  }
+  {^"Import manuel (secours)"
+    Fichier CSV | "                                        " | [Parcourir...] | [Importer]
+  }
+  ..
+  {^"Video Poker — génération de données aléatoires"
+    Nombre de mains | "100000 " | [Générer]
+    (aucun historique : mains aléatoires indépendantes)
+  }
+}
+@endsalt
+
+@startsalt vue-11-config-video-poker
+title 11 — Configuration Video Poker : parcours propre au jeu (FR2, FR25)
+{+
+  {/ Dashboard | <b>Config jeu</b> | Stratégie | Simulation | Résultats }
+  {^"Partie"
+    Mise (crédits) | "1 "
+    Table de paiement | ^Jacks or Better 9/6 (full-pay)^
+  }
+  {^"Simulation (backtest Monte-Carlo)"
+    Nombre de mains | "100000 "
+    Itérations | "10 "
+  }
+  {^"Stratégie (modèle compatible)"
+    Stratégie | ^Optimale^
+    (ex. optimale, toujours garder une paire… — point ouvert § 18.6)
+  }
+  ..
+  [<- Retour] | [Lancer la simulation ->]
+}
+@endsalt

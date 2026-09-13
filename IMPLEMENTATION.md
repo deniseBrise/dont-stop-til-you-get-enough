@@ -137,6 +137,7 @@ Références : `FRn` = exigence fonctionnelle (SPECS § 6) · `USn.n` = user sto
 | `[x]` | `SPECS.md` (source de vérité) | établi |
 | `[x]` | `IMPLEMENTATION.md` (ce fichier) | établi |
 | `[x]` | `AGENTS.md` (fonctionnement) | établi |
+| `[x]` | Diagrammes PlantUML : `docs/architecture.puml` (UML) + `docs/wireframes.puml` (11 vues) | propositions dérivées de SPECS.md ; syntaxe validée via serveur PlantUML (2026-09-13) |
 | `[ ]` | `README.md` (français) | à l'initialisation du code |
 
 ---
@@ -165,3 +166,4 @@ Références : `FRn` = exigence fonctionnelle (SPECS § 6) · `USn.n` = user sto
 | Date | Événement |
 |------|-----------|
 | 2026-09-13 | Flush du projet (from scratch). Création de `SPECS.md`, `IMPLEMENTATION.md`, `AGENTS.md` sur la branche `flush/qwen/from-scratch-with-python`. Aucun code. |
+| 2026-09-13 | Création de `docs/architecture.puml` (diagramme de classes UML : ui, games, models, batch, data, db, utils + schéma SQLite § 9.1) et `docs/wireframes.puml` (11 wireframes Salt : dashboard, config jeu loterie/Video Poker, config modèle, batch live, résultats, comparaison, aide au jeu ×2, analyse, données). Conceptions **proposées** dérivées de SPECS.md (signatures à figer — points ouverts § 18). Syntaxe validée par rendu serveur PlantUML. |

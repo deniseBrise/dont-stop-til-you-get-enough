@@ -1,0 +1,303 @@
+@startuml architecture
+' ==========================================================================
+' dont-stop-til-you-get-enough — Diagramme de classes UML de l'application.
+' PROPOSITION de conception dérivée de SPECS.md v0.1.0 (source de vérité).
+' Aucun code n'existe encore : les signatures exactes seront figées à
+' l'implémentation (point ouvert SPECS § 18.7 — auto-découverte).
+' Références : FRn = exigence fonctionnelle (SPECS § 6).
+' ==========================================================================
+
+title Architecture applicative — dont-stop-til-you-get-enough\n(proposition issue de SPECS.md v0.1.0)
+
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+
+package "src/ui — Interface Dash (FR1-FR3, FR21-FR22)" as UI {
+  class App <<src/app.py>> {
+    +run(host: str, port: int): None
+  }
+  class DashboardView {
+    ..FR1 : liste des jeux (logos)..
+    +render(): Component
+  }
+  class GameFlowView {
+    ..FR2 : parcours défini par le jeu..
+    +render(game: BaseGame): Component
+  }
+  class BatchRunView {
+    ..FR15 : progression live..
+    ..FR16 : arrêt propre..
+    ..FR33 : workers ajustables..
+  }
+  class ResultsView {
+    ..FR28 : métriques d'un batch..
+    ..FR31 : tableaux + graphiques..
+  }
+  class ComparisonView {
+    ..FR29-FR30 : comparer, trier,..
+    ..filtrer, regrouper les batchs..
+  }
+  class AnalysisView {
+    ..FR21 : fréquences, écarts,..
+    ..distributions..
+  }
+  class AssistView {
+    ..FR19 : grilles suggérées..
+    ..FR20 : stratégie de conservation..
+  }
+  class DataView {
+    ..FR24 : import CSV manuel..
+    ..FR27 : dernier téléchargement..
+  }
+  class I18n {
+    +t(key: str): str
+    +set_language(lang: str): None
+    ..FR3 : français / anglais..
+  }
+  class AgGridTable <<composant>> {
+    ..FR22 : AG Grid Community..
+    ..tri, filtres, virtualisation..
+  }
+  class PlotlyChart <<composant>> {
+    ..FR22 : graphiques interactifs..
+  }
+}
+
+class PluginRegistry <<auto-découverte>> {
+  +discover_games(path: str): list[BaseGame]
+  +discover_models(path: str): list[BaseModel]
+  +models_for(game: BaseGame): list[BaseModel]
+  ..FR4, FR8 : scan drop-in..
+  ..FR9 : modèles compatibles..
+}
+
+package "src/games — Plugins jeux (FR4-FR7)" as GAMES {
+  abstract class BaseGame {
+    +{abstract} key: str
+    +{abstract} name_fr: str
+    +{abstract} name_en: str
+    +{abstract} logo: str
+    +{abstract} version: str
+    --
+    +{abstract} rules(): GameRules
+    +{abstract} default_params(): dict
+    +{abstract} compute_payout(draw: Draw, prediction: Prediction): Payout
+    +{abstract} metrics(): list[MetricDef]
+    +{abstract} ui_flow(): list[UiStep]
+    +{abstract} data_source(): DataSourceKind
+    +{abstract} compatible_models(): list[str]
+  }
+  class LotoGame {
+    ..5 numéros / 1-49 + 1 / 1-10..
+    ..options : 2nd tirage, Joker+..
+    ..variantes : Grand-Loto, Super-Loto (§ 18.4)..
+  }
+  class EuromillionGame {
+    ..5 numéros / 1-50 + 2 étoiles / 1-12..
+    ..option : Étoile+..
+  }
+  class VideoPokerGame {
+    ..Jacks or Better (table 9/6)..
+    ..distribution / conservation / paiement..
+  }
+}
+
+package "src/models — Plugins modèles (FR8-FR11)" as MODELS {
+  abstract class BaseModel {
+    +{abstract} key: str
+    +{abstract} name_fr: str
+    +{abstract} name_en: str
+    +{abstract} version: str
+    --
+    +{abstract} default_params(): dict
+    +{abstract} predict(history: list[Draw], params: dict): Prediction
+  }
+  class RandomModel {
+    +seed: int | timestamp
+  }
+  class FixedValueModel {
+    +numeros: list[int]
+  }
+  class FrequencyModel {
+    +fenetre: int
+    +mode: hot | cold | balanced
+  }
+}
+
+package "src/batch — Moteur de backtest (FR12-FR18)" as BATCH {
+  class BatchEngine {
+    +create_batches(game: BaseGame, model: BaseModel, config: BatchConfig, iterations: int): list[Batch]
+    +expand_ranges(config: BatchConfig): list[BatchConfig]
+    +run(): None
+    +stop(): None
+    +resume_pending(): None
+    +set_workers(count: int): None
+    ..FR13 : 1 range = 1 batch par valeur..
+    ..FR17 : reprise après crash..
+  }
+  class Batch {
+    +id: int
+    +status: BatchStatus
+    +total_iterations: int
+    +completed_iterations: int
+    ..FR18 : ID unique auto-incrémenté..
+  }
+  class WorkerPool {
+    -executor: ProcessPoolExecutor
+    ..FR14 : parallélisme CPU..
+  }
+  enum BatchStatus {
+    PENDING
+    RUNNING
+    STOPPED
+    COMPLETED
+    FAILED
+  }
+}
+
+package "src/data — Sources de données (FR23-FR27)" as DATA {
+  class FdjDownloader {
+    +download(game_key: str): Path
+    ..FR23 : historique officiel FDJ..
+    ..FR26 : retry avec backoff..
+  }
+  class CsvImporter {
+    +import_file(path: Path): int
+    ..FR24 : fallback manuel..
+  }
+  class HandGenerator {
+    +generate_hands(count: int): list[Hand]
+    ..FR25 : données aléatoires Video Poker..
+  }
+}
+
+package "src/db — Persistance SQLite WAL (FR32)" as DB {
+  class Database {
+    +connect(path: Path): Connection
+    +execute(sql: str, params: tuple): None
+    +migrate(): None
+    ..mode WAL, écritures atomiques..
+    ..raw SQL, pas d'ORM..
+  }
+  class games <<table>> {
+    key : TEXT UNIQUE
+    name_fr, name_en, type
+  }
+  class draws <<table>> {
+    game_id, draw_date
+    numbers, extra_numbers
+    jackpot
+    source : fdj | manual | generated
+  }
+  class models <<table>> {
+    key : TEXT UNIQUE
+    name_fr, name_en, description
+  }
+  class model_params <<table>> {
+    model_id, param_key, param_value
+  }
+  class batches <<table>> {
+    game_id, model_id
+    game_params, model_params
+    status, total_iterations
+    completed_iterations, created_at
+  }
+  class batch_results <<table>> {
+    batch_id, iteration, ref
+    prediction, outcome, gain, cost
+  }
+  class batch_metrics <<table>> {
+    batch_id, metric_key, metric_value
+  }
+}
+
+package "src/utils" as UTILS {
+  class Config {
+    +get(key: str): str
+    ..FR34 : configuration via .env..
+  }
+  class Logger {
+    +get_logger(name: str): Logger
+    ..jamais de stack trace exposée..
+  }
+}
+
+' --- Héritages plugins -----------------------------------------------------
+BaseGame <|-- LotoGame
+BaseGame <|-- EuromillionGame
+BaseGame <|-- VideoPokerGame
+BaseModel <|-- RandomModel
+BaseModel <|-- FixedValueModel
+BaseModel <|-- FrequencyModel
+
+' --- Auto-découverte --------------------------------------------------------
+PluginRegistry o-- BaseGame : découvre (drop-in)
+PluginRegistry o-- BaseModel : découvre (drop-in)
+BaseGame ..> BaseModel : compatible_models()
+
+' --- UI ----------------------------------------------------------------------
+App *-- DashboardView
+App *-- GameFlowView
+App *-- BatchRunView
+App *-- ResultsView
+App *-- ComparisonView
+App *-- AnalysisView
+App *-- AssistView
+App *-- DataView
+App ..> I18n
+App ..> Config
+DashboardView --> PluginRegistry : liste des jeux
+GameFlowView --> BaseGame : parcours du jeu
+ResultsView ..> AgGridTable
+ResultsView ..> PlotlyChart
+ComparisonView ..> AgGridTable
+AnalysisView ..> PlotlyChart
+
+' --- Batch --------------------------------------------------------------------
+BatchRunView --> BatchEngine : lancer / stopper
+BatchEngine --> BaseGame
+BatchEngine --> BaseModel
+BatchEngine *-- Batch
+BatchEngine --> WorkerPool
+Batch --> BatchStatus
+BatchEngine --> Database : état + résultats
+
+' --- Données -------------------------------------------------------------------
+DataView --> FdjDownloader
+DataView --> CsvImporter
+LotoGame ..> FdjDownloader : source
+EuromillionGame ..> FdjDownloader : source
+VideoPokerGame ..> HandGenerator : source
+FdjDownloader --> Database : draws
+CsvImporter --> Database : draws
+HandGenerator ..> BatchEngine : mains simulées
+
+' --- Persistance (schéma § 9.1) -------------------------------------------------
+Database --> games
+Database --> draws
+Database --> models
+Database --> model_params
+Database --> batches
+Database --> batch_results
+Database --> batch_metrics
+games "1" -- "0..*" draws
+games "1" -- "0..*" batches
+models "1" -- "0..*" batches
+models "1" -- "0..*" model_params
+batches "1" -- "0..*" batch_results
+batches "1" -- "0..*" batch_metrics
+
+note bottom of PluginRegistry
+  Mécanique exacte d'auto-découverte
+  = point ouvert SPECS § 18.7
+  (classe de base, métadonnées).
+end note
+
+note bottom of WorkerPool
+  Comportement au changement
+  de workers en live = point
+  ouvert SPECS § 18.5.
+end note
+
+@enduml
